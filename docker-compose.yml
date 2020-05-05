@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  qok-crawler-http:
+    build: ./http
+    environment:
+      - REDIS_URL=redisq:6379
+    volumes: 
+      - './http:/app'
+    depends_on:
+      - redisq
+    ports:
+      - 8686:8686
+
+  qok-crawler-consumer:
+    build: ./consumer
+    environment: 
+      - REDIS_URL=redisq:6379
+    depends_on:
+      - redisq
+
+  redisq:
+    image: redis
+    container_name: qok_crawler_redis
+    ports:
+        - 6378:6379
+   

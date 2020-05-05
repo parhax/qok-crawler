@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"time"
 
@@ -22,7 +23,9 @@ const (
 )
 
 func main() {
-	connection := rmq.OpenConnection("consumer", "tcp", "localhost:6379", 1)
+	redisUrl := os.Getenv("REDIS_URL")
+	// connection := rmq.OpenConnection("consumer", "tcp", "localhost:6379", 1)
+	connection := rmq.OpenConnection("consumer", "tcp", redisUrl, 1)
 	queue := connection.OpenQueue("crawl_tasks")
 	queue.StartConsuming(unackedLimit, 500*time.Millisecond)
 	for i := 0; i < numConsumers; i++ {
