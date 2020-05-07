@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  qok-crawler-http:
+  qok-http:
     build: ./http
     environment:
       - REDIS_URL=redisq:6379
@@ -12,10 +12,15 @@ services:
     ports:
       - 8686:8686
 
-  qok-crawler-consumer:
+  qok-consumer:
     build: ./consumer
     environment: 
       - REDIS_URL=redisq:6379
+      - MYSQL_URL=mysqldb:3306
+      - MYSQL_DB=qok_crawler
+    volumes:
+      - './consumer:/app'
+    restart: always
     depends_on:
       - redisq
 
@@ -24,4 +29,12 @@ services:
     container_name: qok_crawler_redis
     ports:
         - 6378:6379
-   
+    
+  mysqldb:
+    image:  mysql
+    container_name: qok_crawler_mysql
+    environment: 
+      - MYSQL_DATABASE=qok_crawler
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - 3307:3306 

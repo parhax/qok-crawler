@@ -12,8 +12,8 @@ COPY . .
 
 # Build the application
 
-RUN go build  -o main .
+RUN go build  -o consumer .
 
-WORKDIR /dist
-RUN cp /app/main  .
-CMD ["/dist/main"]
+WORKDIR /distt
+RUN cp /app/consumer  .
+CMD ["/distt/consumer"]

@@ -23,6 +23,7 @@ const (
 )
 
 func main() {
+	fmt.Printf("Consumer Started")
 	redisUrl := os.Getenv("REDIS_URL")
 	// connection := rmq.OpenConnection("consumer", "tcp", "localhost:6379", 1)
 	connection := rmq.OpenConnection("consumer", "tcp", redisUrl, 1)
@@ -86,7 +87,7 @@ func crawlIt(sUrl string) {
 		} else {
 			strBody := string(body)
 			// re := regexp.MustCompile("<title>(.*?)</title>")
-			re := regexp.MustCompile("/<title>(.*?)</title>/")
+			re := regexp.MustCompile("<title*>(.*?)</title>")
 			match := re.FindStringSubmatch(strBody)
 			if len(match) <= 0 {
 				fmt.Printf("Could not find any title for %s ", sUrl)
@@ -105,11 +106,26 @@ func crawlIt(sUrl string) {
 }
 
 func (crawler *Crawler) storeInDb() {
-	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/qok_crawler_golang")
+	mysqlUrl := os.Getenv("MYSQL_URL")
+	mysqlDB := os.Getenv("MYSQL_DB")
+	dataSourceName := fmt.Sprintf("root:root@tcp(%s)/%s", mysqlUrl, mysqlDB)
+	// db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/qok_crawler_golang")
+	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		panic(err.Error())
 	}
 	defer db.Close()
+	var tableQuery = `CREATE TABLE IF NOT EXISTS title_crawling_results (
+		id int(11) NOT NULL auto_increment,   
+		url  varchar(100) NOT NULL default '',
+		title varchar(20) NOT NULL default '',    
+		 PRIMARY KEY  (id)
+	  );`
+	create, err := db.Query(tableQuery)
+	if err != nil {
+		panic(err.Error())
+	}
+	create.Close()
 
 	var query = "INSERT IGNORE INTO title_crawling_results (`url`,`title`) VALUES (?, ?)"
 
