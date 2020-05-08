@@ -77,33 +77,3 @@ func crawlIt(sUrl string) {
 		crawler.StoreInDb()
 	}
 }
-
-// func crawlIt(sUrl string) {
-// 	resp, err := http.Get(sUrl)
-// 	if err != nil {
-// 		fmt.Println("An error has occured")
-// 		fmt.Println(err)
-// 	} else {
-// 		defer resp.Body.Close()
-// 		body, err := ioutil.ReadAll(resp.Body)
-// 		if err != nil {
-// 			fmt.Println("Read error has occured")
-// 		} else {
-// 			strBody := string(body)
-// 			// re := regexp.MustCompile("<title>(.*?)</title>")
-// 			re := regexp.MustCompile("<title*>(.*?)</title>")
-// 			match := re.FindStringSubmatch(strBody)
-// 			if len(match) <= 0 {
-// 				fmt.Printf("Could not find any title for %s ", sUrl)
-// 			} else {
-// 				fmt.Printf("%s ", match[0])
-
-// 				var crawler model.Crawler
-// 				crawler.SetUrl(sUrl)
-// 				crawler.SetTitle(match[0])
-// 				crawler.StoreInDb()
-// 			}
-
-// 		}
-// 	}
-// }
