@@ -2,6 +2,11 @@ package model
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"regexp"
 
 	"qok.com/crawler/consumer/db"
 )
@@ -18,30 +23,29 @@ func (crawler *Crawler) SetTitle(str string) {
 	crawler.title = str
 }
 
-// func (crawler *Crawler) DoCrawl(sUrl string) (string, error) {
-// 	resp, err := http.Get(sUrl)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (crawler *Crawler) DoCrawl(sUrl string) (string, error) {
+	resp, err := http.Get(sUrl)
+	if err != nil {
+		return "", err
+	}
 
-// 	defer resp.Body.Close()
-// 	body, err := ioutil.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	strBody := string(body)
-// 	// re := regexp.MustCompile("<title>(.*?)</title>")
-// 	re := regexp.MustCompile("<title*>(.*?)</title>")
-// 	match := re.FindStringSubmatch(strBody)
-// 	if len(match) <= 0 {
-// 		// fmt.Printf("Could not find any title for %s ", sUrl)
-// 		return Error("Could not find any title for %s")
-// 	} else {
-// 		// fmt.Printf("%s ", match[0])
-// 		return match[0], nil
-// 	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	strBody := string(body)
+	re := regexp.MustCompile("<title*>(.*?)</title>")
+	match := re.FindStringSubmatch(strBody)
+	if len(match) <= 0 {
+		str := fmt.Sprintf("Could not find any title for %s ", sUrl)
+		err := errors.New(str)
+		return "", err
+	} else {
+		return match[0], nil
+	}
+}
 
-// }
 func (crawler *Crawler) StoreInDb() {
 	msql, err := db.GetMysqlConnection()
 	if err != nil {

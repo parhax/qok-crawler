@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/adjust/rmq"
@@ -70,31 +67,43 @@ func (consumer *Consumer) Consume(delivery rmq.Delivery) {
 
 //@todo extract the crawling logic into Crawler model
 func crawlIt(sUrl string) {
-	resp, err := http.Get(sUrl)
+	var crawler model.Crawler
+	result, err := crawler.DoCrawl(sUrl)
 	if err != nil {
-		fmt.Println("An error has occured")
-		fmt.Println(err)
+		fmt.Println("New error has occured")
 	} else {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Read error has occured")
-		} else {
-			strBody := string(body)
-			// re := regexp.MustCompile("<title>(.*?)</title>")
-			re := regexp.MustCompile("<title*>(.*?)</title>")
-			match := re.FindStringSubmatch(strBody)
-			if len(match) <= 0 {
-				fmt.Printf("Could not find any title for %s ", sUrl)
-			} else {
-				fmt.Printf("%s ", match[0])
-
-				var crawler model.Crawler
-				crawler.SetUrl(sUrl)
-				crawler.SetTitle(match[0])
-				crawler.StoreInDb()
-			}
-
-		}
+		crawler.SetUrl(sUrl)
+		crawler.SetTitle(result)
+		crawler.StoreInDb()
 	}
 }
+
+// func crawlIt(sUrl string) {
+// 	resp, err := http.Get(sUrl)
+// 	if err != nil {
+// 		fmt.Println("An error has occured")
+// 		fmt.Println(err)
+// 	} else {
+// 		defer resp.Body.Close()
+// 		body, err := ioutil.ReadAll(resp.Body)
+// 		if err != nil {
+// 			fmt.Println("Read error has occured")
+// 		} else {
+// 			strBody := string(body)
+// 			// re := regexp.MustCompile("<title>(.*?)</title>")
+// 			re := regexp.MustCompile("<title*>(.*?)</title>")
+// 			match := re.FindStringSubmatch(strBody)
+// 			if len(match) <= 0 {
+// 				fmt.Printf("Could not find any title for %s ", sUrl)
+// 			} else {
+// 				fmt.Printf("%s ", match[0])
+
+// 				var crawler model.Crawler
+// 				crawler.SetUrl(sUrl)
+// 				crawler.SetTitle(match[0])
+// 				crawler.StoreInDb()
+// 			}
+
+// 		}
+// 	}
+// }
