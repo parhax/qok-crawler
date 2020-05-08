@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/adjust/rmq"
-
-	"database/sql"
+	"qok.com/crawler/consumer/model"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -69,11 +68,7 @@ func (consumer *Consumer) Consume(delivery rmq.Delivery) {
 
 }
 
-type Crawler struct {
-	url   string
-	title string
-}
-
+//@todo extract the crawling logic into Crawler model
 func crawlIt(sUrl string) {
 	resp, err := http.Get(sUrl)
 	if err != nil {
@@ -94,47 +89,12 @@ func crawlIt(sUrl string) {
 			} else {
 				fmt.Printf("%s ", match[0])
 
-				crawler := Crawler{
-					url:   sUrl,
-					title: match[0],
-				}
-				crawler.storeInDb()
+				var crawler model.Crawler
+				crawler.SetUrl(sUrl)
+				crawler.SetTitle(match[0])
+				crawler.StoreInDb()
 			}
 
 		}
 	}
-}
-
-func (crawler *Crawler) storeInDb() {
-	mysqlUrl := os.Getenv("MYSQL_URL")
-	mysqlDB := os.Getenv("MYSQL_DB")
-	dataSourceName := fmt.Sprintf("root:root@tcp(%s)/%s", mysqlUrl, mysqlDB)
-	// db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/qok_crawler_golang")
-	db, err := sql.Open("mysql", dataSourceName)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-	var tableQuery = `CREATE TABLE IF NOT EXISTS title_crawling_results (
-		id int(11) NOT NULL auto_increment,   
-		url  varchar(100) NOT NULL default '',
-		title varchar(20) NOT NULL default '',    
-		 PRIMARY KEY  (id)
-	  );`
-	create, err := db.Query(tableQuery)
-	if err != nil {
-		panic(err.Error())
-	}
-	create.Close()
-
-	var query = "INSERT IGNORE INTO title_crawling_results (`url`,`title`) VALUES (?, ?)"
-
-	insert, err := db.Query(query, crawler.url, crawler.title)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer insert.Close()
-
 }
