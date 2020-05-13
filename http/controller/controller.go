@@ -8,17 +8,21 @@ import (
 
 	"github.com/adjust/rmq"
 	"qok.com/crawler/http/config"
+	"qok.com/crawler/http/logwrapper"
 )
 
 func CrawlerHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	body, _ := ioutil.ReadAll(req.Body)
+	body, readErr := ioutil.ReadAll(req.Body)
+	if readErr != nil {
+		logwrapper.Load().Fatal("ioutil read error in crawlerHandler")
+	}
 	var arr []string
 	err := json.Unmarshal(body, &arr)
 
 	if err != nil {
-		fmt.Printf("%#v", err)
+		logwrapper.Load().Fatalf("%#v", err)
 	}
 	redisUrl := config.Load().Redis_url
 	connection := rmq.OpenConnection("my service", "tcp", redisUrl, 1)
