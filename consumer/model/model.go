@@ -2,51 +2,17 @@ package model
 
 import (
 	"database/sql"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"regexp"
 
 	"qok.com/crawler/consumer/db"
 )
 
-type Crawler struct {
-	url   string
-	title string
+type CrawlResult struct {
+	Url   string
+	Title string
 }
 
-func (crawler *Crawler) SetUrl(str string) {
-	crawler.url = str
-}
-func (crawler *Crawler) SetTitle(str string) {
-	crawler.title = str
-}
-
-func (crawler *Crawler) DoCrawl(sUrl string) (string, error) {
-	resp, err := http.Get(sUrl)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	strBody := string(body)
-	re := regexp.MustCompile("<title*>(.*?)</title>")
-	match := re.FindStringSubmatch(strBody)
-	if len(match) <= 0 {
-		str := fmt.Sprintf("Could not find any title for %s ", sUrl)
-		err := errors.New(str)
-		return "", err
-	} else {
-		return match[0], nil
-	}
-}
-
-func (crawler *Crawler) StoreInDb() {
+//StoreInDB store crawling result into database
+func (crawler *CrawlResult) StoreInDb() {
 	msql, err := db.GetMysqlConnection()
 	if err != nil {
 		panic(err.Error())
@@ -57,7 +23,7 @@ func (crawler *Crawler) StoreInDb() {
 
 	var query = "INSERT IGNORE INTO title_crawling_results (`url`,`title`) VALUES (?, ?)"
 
-	insert, err := msql.Query(query, crawler.url, crawler.title)
+	insert, err := msql.Query(query, crawler.Url, crawler.Title)
 
 	if err != nil {
 		panic(err.Error())

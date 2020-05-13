@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/adjust/rmq"
+	"qok.com/crawler/consumer/logic"
 	"qok.com/crawler/consumer/model"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -60,20 +59,20 @@ func (consumer *Consumer) Consume(delivery rmq.Delivery) {
 	} else {
 		delivery.Ack()
 	}
-	site_url := delivery.Payload()
-	crawlIt(site_url)
+	sURL := delivery.Payload()
+	crawlIt(sURL)
 
 }
 
-//@todo extract the crawling logic into Crawler model
-func crawlIt(sUrl string) {
-	var crawler model.Crawler
-	result, err := crawler.DoCrawl(sUrl)
+func crawlIt(sURL string) {
+	result, err := logic.Crawl(sURL)
 	if err != nil {
-		fmt.Println("New error has occured")
-	} else {
-		crawler.SetUrl(sUrl)
-		crawler.SetTitle(result)
-		crawler.StoreInDb()
+		log.Fatal(err)
 	}
+	crawler := model.CrawlResult{
+		Url:   sURL,
+		Title: result,
+	}
+	crawler.StoreInDb()
+
 }
