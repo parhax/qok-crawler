@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/adjust/rmq"
+	"qok.com/crawler/http/config"
 )
 
 func CrawlerHandler(w http.ResponseWriter, req *http.Request) {
@@ -20,7 +20,7 @@ func CrawlerHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		fmt.Printf("%#v", err)
 	}
-	redisUrl := os.Getenv("REDIS_URL")
+	redisUrl := config.Load().Redis_url
 	connection := rmq.OpenConnection("my service", "tcp", redisUrl, 1)
 	taskQueue := connection.OpenQueue("crawl_tasks")
 
